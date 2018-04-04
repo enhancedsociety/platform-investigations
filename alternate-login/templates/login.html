@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+</head>
+
+<body>
+    <form id="existing">
+        <fieldset>
+            <legend>
+                <h4>Accounts</h4>
+            </legend>
+        </fieldset>
+    </form>
+    <form name="f" action="javascript:addAccount(f)">
+        <fieldset>
+            <legend>
+                <h4>Add Account</h4>
+            </legend>
+            <input type="text" pattern="0x[\d\w]{64}">
+            <button>Add</button>
+        </fieldset>
+    </form>
+
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+    <script src="https://cdn.rawgit.com/ethereumjs/browser-builds/2fb69a714afe092b06645286f14b94f41e5c062c/dist/ethereumjs-tx.js"></script>
+    <script>
+        const promisify = (func, ...args) =>
+            new Promise((resolve, reject) =>
+                func(...args, (err, value) =>
+                    (err ? reject(err) : resolve(value))
+                )
+            );
+
+        const el = (tag, s) => {
+            const e = document.createElement(tag);
+            if (s) {
+                e.innerText = s || '';
+            }
+            return e;
+        };
+
+        const getAccounts = () => {
+            return JSON.parse(window.localStorage.getItem('ethAccounts') || '[]');
+        }
+
+        const addAccount = (f) => {
+            const accounts = getAccounts();
+
+            const privKey = f.querySelector('input').value;
+            const address = EthJS.Util.bufferToHex(EthJS.Util.privateToAddress(privKey))
+            account = {
+                address: address,
+                privateKey: privKey
+            };
+
+            if (!accounts.find(x => x.address === address)) {
+                accounts.push(account);
+            }
+
+            console.log(accounts);
+            window.localStorage.setItem('ethAccounts', JSON.stringify(accounts));
+            doLogin(account.address);
+        }
+
+        const sizedHex = (msg, size) => {
+            const buf = [...new Array(size)].map(() => '0').join('');
+            if (msg.length < length) {
+                msg.copy(buf, length - msg.length)
+                return buf
+            }
+            return msg.slice(-length)
+        }
+
+        const doLogin = (account) => {
+            fetch(`/token/${account}`, {
+                credentials: 'include',
+            })
+                .then(resp => resp.json())
+                .then(respJSON => {
+                    const msgHash = EthJS.Util.rlphash(window.location.host + '|' + respJSON.token);
+                    const accounts = getAccounts();
+                    console.log(accounts, account, accounts.filter(x => x.address === account))
+                    const privKey = accounts.filter(x => x.address === account)[0].privateKey;
+                    console.log(privKey);
+                    const sig = EthJS.Util.ecsign(msgHash, EthJS.Util.toBuffer(privKey));
+                    console.log(sig, privKey);
+                    const sigBuf = EthJS.Util.Buffer.concat([sizedHex(sig.r, 32), sizedHex(sig.s, 32)], 64);
+                    const signed = EthJS.Util.bufferToHex(sigBuf);
+                    console.log(sigBuf, signed);
+                    return Promise.resolve(signed);
+                })
+                .then(signed_token => fetch('/login', {
+                    body: JSON.stringify({ signed_token }),
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                    credentials: 'include',
+                    method: 'POST',
+                }))
+                .then(resp => {
+                    if (resp.ok) {
+                        window.location = '/'
+                    } else {
+                        return Promise.reject(resp.statusText);
+                    }
+                })
+                .catch(e => {
+                    console.error(e);
+                    alert('Login failed. See developer console for details');
+                });
+        };
+
+        const fillAccounts = () => {
+            const accounts = document.querySelector('#existing>fieldset');
+            new Promise((resolve) => {
+                const l = getAccounts();
+                resolve(l ? l.map(x => x.address) : []);
+            })
+                .then(l => {
+
+                    if (l.length > 0) {
+                        l.forEach(account => {
+                            const b = el('button', account);
+                            b.setAttribute('formaction', `javascript:doLogin("${account}")`);
+                            accounts.appendChild(b);
+                        })
+                    } else {
+                        accounts.appendChild(el('p', 'No accounts'));
+                    }
+                });
+        }
+
+
+        window.onload = () => {
+            // Use outside web3 provider since we *want* to use keys internally
+            web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/***REMOVED***'));
+            fillAccounts();
+        };          
+    </script>
+</body>
+
+</html>
