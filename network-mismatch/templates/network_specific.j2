@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>{{ network_name }}</title>
+</head>
+
+<body>
+
+  <h1>Page for {{ network_name }} network</h1>
+  <p style="display: none">You are on a different network</p>
+
+
+  <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+  <script>
+    window.onload = () => {
+      const server_network_id = {{ network_id }};
+      const server_network_name = '{{ network_name }}';
+      // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+      if (typeof web3 !== 'undefined') {
+        // Use Mist/MetaMask's provider
+        web3 = new Web3(web3.currentProvider);
+      } else {
+        web3 = new Web3(new Web3.providers.HttpProvider('https://{{ network_name }}.infura.io/***REMOVED***'));
+      }
+
+      const my_network_id = web3.version.network;
+      const my_network_name = (() => {
+        let s = ''
+        switch (parseInt(my_network_id, 10)) {
+          case 1:
+            s += 'mainnet';
+            break;
+          case 3:
+            s += 'ropsten';
+            break;
+          case 4:
+            s += 'rinkeby';
+            break;
+          case 42:
+            s += 'kovan';
+            break;
+          default:
+            s += `unknown`;
+            break;
+        }
+        return s;
+      })();
+      if (my_network_id != server_network_id) {
+        if(confirm(`You are on ${my_network_name}, but this page expects ${server_network_name}.\nPress OK to be redirected to the right one or Cancel to change your network in MetaMask.`)){
+          window.location = `/${my_network_name}`;
+        }
+        else {
+          document.querySelector('p').style.display = 'block';
+        }
+      }
+      
+      };
+  </script>
+</body>
+
+</html>
