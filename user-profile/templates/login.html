@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+</head>
+
+<body>
+    <form>
+        <fieldset>
+            <legend>
+                <h4>Accounts</h4>
+            </legend>
+        </fieldset>
+    </form>
+
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+    <script>
+        const promisify = (func, ...args) =>
+            new Promise((resolve, reject) =>
+                func(...args, (err, value) =>
+                    (err ? reject(err) : resolve(value))
+                )
+            );
+
+        const el = (tag, s) => {
+            const e = document.createElement(tag);
+            if (s) {
+                e.innerText = s || '';
+            }
+            return e;
+        };
+
+        const doLogin = (account) => {
+            fetch(`/token/${account}`, {
+                credentials: 'include',
+            })
+                .then(resp => resp.json())
+                .then(respJSON => promisify(web3.personal.sign, web3.toHex(window.location.host + '|' + respJSON.token), account))
+                .then(signed_token => fetch('/login', {
+                    body: JSON.stringify({ signed_token }),
+                    headers: {
+                        'content-type': 'application/json'
+                    },
+                    credentials: 'include',
+                    method: 'POST',
+                }))
+                .then(r => r.ok ? Promise.resolve() : Promise.reject(r.statusText))
+                .then(() => window.location = '/dashboard')
+                .catch(e => {
+                    console.error(e);
+                    alert('Login failed. See developer console for details');
+                });
+        };
+
+        const fillAccounts = () => {
+            const accounts = document.querySelector('fieldset');
+            promisify(web3.eth.getAccounts)
+                .then(l => {
+                    if (l.length > 0) {
+                        l.forEach(account => {
+                            const b = el('button', account);
+                            b.setAttribute('formaction', `javascript:doLogin("${account}")`);
+                            accounts.appendChild(b);
+                        })
+                    } else {
+                        accounts.appendChild(el('p', 'No accounts'));
+                    }
+                });
+        }
+
+
+        window.onload = () => {
+            // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+            if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider
+                web3 = new Web3(web3.currentProvider);
+            } else {
+                web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/***REMOVED***'));
+            }
+            fillAccounts();
+        };          
+    </script>
+</body>
+
+</html>

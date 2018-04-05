@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Landing Page</title>
+  </head>
+  <body>
+    <header>
+        <h1>Enhanced Society Platform</h1>
+        {% if user %}
+        <a href="/dashboard">{{ user }} Dashboard</a>
+        {% else %}
+        <a href="/login">Sign in</a>
+        {% endif %}
+    </header>
+  </body>
+</html>
