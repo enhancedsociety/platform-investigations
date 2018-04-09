@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+</head>
+
+<body>
+    {% include 'header.html' %}
+    
+    <h1>My account</h1>
+    <hr>
+    <dl>
+        <dt>Address</dt><dd>{{ user }}</dd>
+    </dl>
+
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+    <script>
+        const promisify = (func, ...args) =>
+            new Promise((resolve, reject) =>
+                func(...args, (err, value) =>
+                    (err ? reject(err) : resolve(value))
+                )
+            );
+
+        const el = (tag, s) => {
+            const e = document.createElement(tag);
+            if (s) {
+                e.innerText = s || '';
+            }
+            return e;
+        };
+        const account = "{{ user }}";
+
+
+        window.onload = () => {
+            // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+            if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider
+                web3 = new Web3(web3.currentProvider);
+            } else {
+                alert('No ethereum accounts');
+                window.location = '/';
+            }
+        };          
+    </script>
+</body>
+
+</html>

@@ -113,8 +113,8 @@ contract BasicToken is ERC20Basic {
 
 contract PlatformToken is BasicToken {
 
-    string public constant name = "ESPlatformToken"; // solium-disable-line uppercase
-    string public constant symbol = "ESPT"; // solium-disable-line uppercase
+    string public name; // solium-disable-line uppercase
+    string public symbol; // solium-disable-line uppercase
     uint8 public constant decimals = 0; // solium-disable-line uppercase
 
     uint256 public constant INITIAL_SUPPLY = 10000000000;
@@ -122,9 +122,11 @@ contract PlatformToken is BasicToken {
     /**
     * @dev Constructor that gives an ICO contract all of the supply.
     */
-    function SimpleToken(address ico) public {
+    function PlatformToken(address ico, string _name, string _symbol) public {
         totalSupply_ = INITIAL_SUPPLY;
         balances[ico] = INITIAL_SUPPLY;
+        name = _name;
+        symbol = _symbol;
         emit Transfer(0x0, ico, INITIAL_SUPPLY);
     }
 

@@ -8,3 +8,6 @@ venv
 
 # Editor specific
 .vscode
+
+# cache
+user_session_challenge

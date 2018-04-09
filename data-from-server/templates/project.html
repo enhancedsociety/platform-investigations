@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+
+<body>
+    {% include 'header.html' %}
+    <main>
+        <h2>Token</h2>
+        <dl>
+            <dt>Address</dt>
+            <dd>{{ token.address }}</dd>
+            <dt>Name</dt>
+            <dd>{{ token.name }} ({{ token.symbol }})</dd>
+            <dt>Total Supply</dt>
+            <dd>{{ token.supply }} {{ token.symbol }}</dd>
+            <dt>My balance</dt>
+            <dd>{{ user_balance }} {{ token.symbol }}</dd>
+        </dl>
+        <h2>ICO/TSE</h2>
+        <dl>
+            <dt>Address</dt>
+            <dd>{{ ico.address }}</dd>
+            <dt>Funds raised</dt>
+            <dd>{{ ico.funds }} wei</dd>
+            <dt>Price</dt>
+            <dd>{{ ico.price }} wei/{{ token.symbol }}</dd>
+            <dt>Tokens left in sale</dt>
+            <dd>{{ ico.balance }} {{ token.symbol }}</dd>
+        </dl>
+        <form name="f" action="javascript:buyNOW(f)">
+            <fieldset>
+                <legend>
+                    <h3>Buy {{ token.symbol }}</h3>
+                </legend>
+                <label>Amount
+                    <input type="number" step="1" min="0" max="{{ ico.balance }}" value=1>
+                </label>
+                <button>Buy 1 {{ token.symbol }} for {{ ico.price }} wei</button>
+            </fieldset>
+        </form>
+    </main>
+
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+    <script>
+        const promisify = (func, ...args) =>
+            new Promise((resolve, reject) =>
+                func(...args, (err, value) =>
+                    (err ? reject(err) : resolve(value))
+                )
+            );
+
+        const el = (tag, s) => {
+            const e = document.createElement(tag);
+            if (s) {
+                e.innerText = s || '';
+            }
+            return e;
+        };
+        const account = "{{ user }}";
+        const token_symbol = "{{ token.symbol }}";
+        const token_price = {{ ico.price }};
+
+        const buyNOW = (f) => {
+            const val = document.querySelector('input').value;
+            const cost = val * token_price;
+
+            console.log({
+                val,
+                cost,
+                from: "{{ user }}",
+                to: "{{ ico.address }}",
+                gas: 100000
+            })
+
+            promisify(web3.eth.sendTransaction, { from: "{{ user }}", to: "{{ ico.address }}", gas: 100000, value: cost })
+                .then((tx_hash) => promisify(web3.eth.getTransactionReceipt, tx_hash))
+                .then(console.log)
+                .then(() => promisify(web3.eth.getBalance, "{{ user }}")).then(console.log)
+                .then(console.log)
+                .then(() => promisify(web3.eth.getBalance, "{{ ico.address }}"))
+                .then(console.log)
+                .then(() => promisify(web3.eth.getBalance, "{{ token.address }}"))
+                .then(console.log)
+                .then(() => {
+                    f.reset();
+                    window.location.reload()
+                })
+                .catch((e) => {
+                    console.error(e);
+                    alert('failed ' + e);
+                });
+        }
+
+        window.onload = () => {
+            // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+            if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider
+                web3 = new Web3(web3.currentProvider);
+            } else {
+                alert('No ethereum accounts');
+                window.location = '/';
+            }
+
+            document.querySelector('input').oninput = (e) => {
+                const val = e.target.value;
+                document.querySelector('form>fieldset>button').innerText = `Buy ${val} ${token_symbol} for ${val * token_price} wei (${web3.fromWei(val * token_price, 'ether')} ether)`;
+            }
+        };
+    </script>
+</body>
+
+</html>

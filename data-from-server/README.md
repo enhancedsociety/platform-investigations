@@ -22,4 +22,4 @@ There are 3 types of contracts defined:
  - Token, a *very* simple fixed supply ERC20 token to be deployed with each project.
  - ICO, the initial holder of a projects holders, with specific intructions to dole out the tokens (just plain "x money for y tokens" in this case).
 
- The platform has references to all of the others, and there is a platform deployment on ropsten (so this toy project has a reference on-chain) at **TODO**
+ The platform has references to all of the others, and there is a platform deployment on ropsten (so this toy project has a reference on-chain) at `0x9C7Da6Bd482C724449ceA8497D4f86f090DbA80e`

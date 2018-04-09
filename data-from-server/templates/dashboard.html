@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard</title>
+</head>
+
+<body>
+    {% include 'header.html' %}
+    <main>
+        {% if invest_projects %}
+        <h2>Projects in portfolio</h2>
+        <dl>
+            {% for project in invest_projects %}
+            <dt>
+                <a href="/project/{{ project.platform_idx }}">{{ project.symbol }}</a>
+            </dt>
+            <dd>{{ project.name }}</dd>
+            {% endfor %}
+        </dl>
+        {% endif %}
+        {% if other_projects %} {% if invest_projects %}
+        <hr> 
+        <h2>Other Projects</h2>
+        {% else %}
+        <h2>All Projects</h2>
+        {% endif%}
+        <dl>
+            {% for project in other_projects %}
+            <dt>
+                <a href="/project/{{ project.platform_idx }}">{{ project.symbol }}</a>
+            </dt>
+            <dd>{{ project.name }}</dd>
+            {% endfor %}
+        </dl>
+        {% endif %}
+    </main>
+</body>
+
+</html>

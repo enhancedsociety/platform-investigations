@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+
+</head>
+
+<body>
+    {% include 'header.html' %}
+    <form name="f" action="javascript:create_project(f)">
+        <fieldset>
+            <legend>
+                <h4>New Project</h4>
+            </legend>
+            <label>Name
+                <input type="text" id="project_name" required>
+            </label>
+            <label>Symbol
+                <input type="text" id="project_symbol" required>
+            </label>
+            <label>Price
+                <input type="number" min=0 step=1 id="token_price" value=1000000 required> wei
+            </label>
+            <button>Create</button>
+        </fieldset>
+    </form>
+    <div id="projProgress">
+        <h2>Steps</h2>
+        <p style="font-weight: bold;">Fill form</p>
+        <p>Setting up Project data</p>
+        <p>Creating ICO contract [REQUIRES INTERACTION ON METAMASK]</p>
+        <p>Creating Token contract [REQUIRES INTERACTION ON METAMASK]</p>
+        <p>Setting up Token on ICO contract [REQUIRES INTERACTION ON METAMASK]</p>
+        <p>Adding to platform [REQUIRES INTERACTION ON METAMASK]</p>
+        <p>Done. Find your project in the
+            <a href="/dashboard" style="opacity: 0;">Platform Dashboard</a>
+        </p>
+    </div>
+
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+    <script>
+        const promisify = (func, ...args) =>
+            new Promise((resolve, reject) =>
+                func(...args, (err, value) =>
+                    (err ? reject(err) : resolve(value))
+                )
+            );
+
+        const el = (tag, s) => {
+            const e = document.createElement(tag);
+            if (s) {
+                e.innerText = s || '';
+            }
+            return e;
+        };
+
+        const ICOABI = {{ ico_abi | safe }};
+        const ICOBytecode = "{{ ico_b }}";
+        const TokenABI = {{ token_abi | safe }};
+        const TokenBytecode = "{{ token_b }}";
+        const PlatformABI = {{ platform_abi | safe }};
+        const PlatformAddress = "{{ platform_contract }}";
+        const account = "{{ user }}";
+
+        let step = 0;
+        const steps = Array.from(document.querySelectorAll('#projProgress>p'));
+        steps.map((x, i) => { if (i > 0) x.style.opacity = 0; })
+        const stepUp = () => {
+            steps[step].style.fontWeight = '';
+            step += 1;
+            steps[step].style.opacity = 1;
+            steps[step].style.fontWeight = 'bold';
+            // console.debug(step);
+            // console.debug(steps.length);
+            // console.debug(steps[step].innerText);
+            if (step === steps.length - 1) {
+                const goToDashBoard = document.querySelector('#projProgress>p>a');
+                goToDashBoard.style.opacity = 1;
+            }
+        }
+
+        const create_project = (f) => {
+            stepUp();
+            const project_name = document.getElementById('project_name').value;
+            const project_symbol = document.getElementById('project_symbol').value;
+            const token_price = document.getElementById('token_price').value;
+
+            const ICOContract = web3.eth.contract(ICOABI);
+            const TokenContract = web3.eth.contract(TokenABI);
+            const PlatformContract = web3.eth.contract(PlatformABI);
+            // console.debug('contracts', ICOContract, TokenContract);
+            //4cf71716b122f94396acf9c48484558de4c81497998c7862b4326c543e2897c7
+            Promise.all([promisify(web3.eth.estimateGas, { data: ICOBytecode }), promisify(web3.eth.estimateGas, { data: TokenBytecode })])
+                .then(([icoGasEstimate, tokenGasEstimate]) => {
+                    // console.debug('estimates', icoGasEstimate, tokenGasEstimate);
+                    stepUp();
+                    return new Promise((resolve, reject) => {
+                        ICOContract.new({ data: `0x${ICOBytecode}`, from: account, gas: icoGasEstimate }, (err, icoInstance) => {
+                            if (err) {
+                                reject(err);
+                            } else {
+                                if (icoInstance.address) {
+                                    stepUp();
+                                    // console.debug('ICO created', icoInstance);
+                                    TokenContract.new(icoInstance.address, project_name, project_symbol, { data: `0x${TokenBytecode}`, from: account, gas: tokenGasEstimate * 2 }, (err, tokenInstance) => {
+                                        if (err) {
+                                            reject(err);
+                                        } else {
+                                            if (tokenInstance.address) {
+                                                stepUp();
+                                                // console.debug('Token created', tokenInstance);
+                                                resolve(promisify(icoInstance.init.bind(icoInstance), tokenInstance.address, token_price)
+                                                    .then(() => [icoInstance.address, tokenInstance.address]));
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        });
+                    });
+                })
+                .then(([icoAddress, tokenAddress]) => {
+                    stepUp();
+                    const platformInstance = PlatformContract.at(PlatformAddress);
+                    // console.debug('addresses', icoAddress, tokenAddress);
+                    // console.debug(platformInstance);
+                    return promisify(platformInstance.addProject.bind(platformInstance), project_name, tokenAddress, icoAddress);
+                })
+                .then(x => { stepUp(); return x })
+                .then(console.debug)
+                .catch(console.error);
+        }
+
+
+        window.onload = () => {
+            // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+            if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider
+                web3 = new Web3(web3.currentProvider);
+            } else {
+                alert('No ethereum accounts');
+                window.location = '/';
+            }
+        };          
+    </script>
+</body>
+
+</html>

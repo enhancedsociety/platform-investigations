@@ -1,0 +1,57 @@
+<style>
+    * {
+        font-family: 'Roboto';
+    }
+
+    header ul {
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #333;
+    }
+
+    header li {
+        float: left;
+    }
+
+    header li a {
+        display: block;
+        color: white;
+        text-align: center;
+        padding: 14px 16px;
+        text-decoration: none;
+    }
+
+    header li a:hover {
+        background-color: #31bfc1;
+    }
+
+    header li.right {
+        float: right;
+    }
+</style>
+
+<header>
+    <h1>Enhanced Society Platform</h1>
+    <ul>
+        {% if user %}
+        <li>
+            <a href="/dashboard">Project Dashboard</a>
+        </li>
+        <li>
+            <a href="/project/create">Create project</a>
+        </li>
+        <li>
+            <a href="/profile">My Profile</a>
+        </li>
+        <li class="right">
+            <a href="/logout">Sign out</a>
+        </li>
+        {% else %}
+        <li class="right">
+            <a href="/login">Sign in</a>
+        </li>
+        {% endif %}
+    </ul>
+</header>

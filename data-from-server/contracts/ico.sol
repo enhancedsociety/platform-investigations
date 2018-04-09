@@ -76,7 +76,7 @@ contract ICO {
     function () payable public {
         require(tokenAddress != address(0));
         require(tokenPriceInWei > 0 wei);
-        uint256 numTokens = msg.value.mul(tokenPriceInWei);
+        uint256 numTokens = msg.value.div(tokenPriceInWei);
         ERC20Basic token = ERC20Basic(tokenAddress);
         require(numTokens <= token.totalSupply());
         require(numTokens <= token.balanceOf(this));
