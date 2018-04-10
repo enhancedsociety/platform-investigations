@@ -30,7 +30,53 @@
     header li.right {
         float: right;
     }
+
+    header li.ropsten,
+    header li.kovan,
+    header li.rinkeby {
+        background-color: darkred;
+    }
 </style>
+
+<script>
+    window.onload = () => {
+        const server_network_id = {{ network_id }};
+        const server_network_name = '{{ network_name }}';
+        // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+        if (typeof web3 !== 'undefined') {
+            // Use Mist/MetaMask's provider
+            web3 = new Web3(web3.currentProvider);
+        } else {
+            alert('Please install Metamask');
+        }
+
+        const my_network_id = web3.version.network;
+        const my_network_name = (() => {
+            let s = '';
+            switch (parseInt(my_network_id, 10)) {
+                case 1:
+                    s += 'mainnet';
+                    break;
+                case 3:
+                    s += 'ropsten';
+                    break;
+                case 4:
+                    s += 'rinkeby';
+                    break;
+                case 42:
+                    s += 'kovan';
+                    break;
+                default:
+                    s += `unknown`;
+                    break;
+            }
+            return s;
+        })();
+        if (my_network_id != server_network_id) {
+            alert(`You are on ${my_network_name}, but this page expects ${server_network_name}.\nPlease change your network in MetaMask.`);
+        }
+};
+</script>
 
 <header>
     <h1>Enhanced Society Platform</h1>
@@ -53,5 +99,10 @@
             <a href="/login">Sign in</a>
         </li>
         {% endif %}
+        <li class="right {{ network_name }}">
+            <a>{{ network_name }}</a>
+        </li>
     </ul>
 </header>
+
+<script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>

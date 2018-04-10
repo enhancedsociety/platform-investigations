@@ -1,5 +1,9 @@
 pragma solidity ^0.4.19;
 
+import "./token.sol";
+
+import "./ico.sol";
+
 contract Platform {
     struct Project {
         address token;
@@ -14,11 +18,13 @@ contract Platform {
         owner = msg.sender;
     }
 
-    function addProject(string name, address token, address ico) public {
-//        require(msg.sender == owner);
-        require(bytes(name).length > 0);
-        require(token != address(0));
+    function addProject(string name, string symbol, uint256 priceInWei) public returns (address, address){
+        address project_owner = msg.sender;
+        ICO ico = new ICO(project_owner);
         require(ico != address(0));
+        PlatformToken token = new PlatformToken(ico, name, symbol);
+        require(token != address(0));
+        ico.init(token, priceInWei);
         projects.push(Project(token, ico, name));
     }
 

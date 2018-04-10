@@ -8,6 +8,7 @@
 </head>
 
 <body>
+    {% include 'header.html' %}
     <form>
         <fieldset>
             <legend>
@@ -16,7 +17,6 @@
         </fieldset>
     </form>
 
-    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
     <script>
         const promisify = (func, ...args) =>
             new Promise((resolve, reject) =>

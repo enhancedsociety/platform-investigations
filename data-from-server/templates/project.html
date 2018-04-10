@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard</title>
+    <title>Project {{ token.name }}</title>
 </head>
 
 <body>
@@ -30,6 +30,8 @@
             <dd>{{ ico.price }} wei/{{ token.symbol }}</dd>
             <dt>Tokens left in sale</dt>
             <dd>{{ ico.balance }} {{ token.symbol }}</dd>
+            <dt>Created by</dt>
+            <dd>{{ ico.owner }}</dd>
         </dl>
         <form name="f" action="javascript:buyNOW(f)">
             <fieldset>
@@ -45,7 +47,6 @@
         </form>
     </main>
 
-    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
     <script>
         const promisify = (func, ...args) =>
             new Promise((resolve, reject) =>

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <title>{{ user }} Profile</title>
 
 </head>
 
@@ -16,7 +16,6 @@
         <dt>Address</dt><dd>{{ user }}</dd>
     </dl>
 
-    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
     <script>
         const promisify = (func, ...args) =>
             new Promise((resolve, reject) =>

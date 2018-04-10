@@ -6,10 +6,20 @@ import web3
 from web3 import Web3, HTTPProvider
 from shove import Shove
 
-from contract_data import PLATFORM_ABI, PLATFORM_BYTECODE, TOKEN_ABI, TOKEN_BYTECODE, ICO_ABI, ICO_BYTECODE
+from contract_data import PLATFORM_ABI, TOKEN_ABI, ICO_ABI
 
 w3 = Web3(HTTPProvider('https://ropsten.infura.io/***REMOVED***'))
 #w3 = Web3(HTTPProvider('http://localhost:8545'))
+
+network_id = int(w3.version.network)
+
+networks = {
+    1: 'mainnet',
+    3: 'ropsten',
+    4: 'rinkeby',
+    5: 'kovan'
+}
+network_name = networks[network_id] if network_id in networks else 'unknown ({})'.format(network_id)
 
 w3.eth.enable_unaudited_features()
 
@@ -23,11 +33,11 @@ w3.eth.enable_unaudited_features()
 # REDEPLOY THE PLATFORM AND START OVER
 #
 ##########
-# Deployment of new projects is still manual, use this key
-# PLATFORM_OWNER_PRIVKEY = '0x8d4ee24d8d99220a91252ac22262562b6db07ae8375878b56868c0ffa7d43c2e'
-
 PLATFORM_ADDRESS = Web3.toChecksumAddress(
-    '0x9C7Da6Bd482C724449ceA8497D4f86f090DbA80e')
+    '0xE995620249f762FB81CD88eB0Fb02Bc460de6952')
+
+# If using a local development chain (such as ganache)
+# the code below can autosetup the platform
 
 # if w3.eth.getCode(PLATFORM_ADDRESS) == b'\x00':
 #    platform_contract = w3.eth.contract(
@@ -76,6 +86,9 @@ CHALLENGE_STORE = Shove('file://user_session_challenge')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if is_logged_in():
+        return redirect(url_for('index'))
+
     if request.method == 'POST':
         form_data = request.get_json(force=True)
         if 'address' in session and 'signed_token' in form_data:
@@ -89,7 +102,7 @@ def login():
                 return abort(401)
         else:
             return abort(400)
-    return render_template('login.html')
+    return render_template('login.html', network_id=network_id, network_name=network_name)
 
 
 @app.route('/token/<address>', methods=['GET'])
@@ -113,7 +126,7 @@ def logout():
 @app.route('/')
 def index():
     user = session['address'] if is_logged_in() else None
-    return render_template('landing.html', user=user)
+    return render_template('landing.html', network_id=network_id, network_name=network_name, user=user)
 
 
 @app.route('/dashboard')
@@ -136,13 +149,13 @@ def dashboard():
             invest_projects.append(p)
         else:
             other_projects.append(p)
-    return render_template('dashboard.html', user=session['address'], invest_projects=invest_projects, other_projects=other_projects)
+    return render_template('dashboard.html', network_id=network_id, network_name=network_name, user=session['address'], invest_projects=invest_projects, other_projects=other_projects)
 
 
 @app.route('/project/create')
 @needs_auth
 def create():
-    return render_template('create.html', user=session['address'], platform_contract=PLATFORM_ADDRESS, platform_abi=PLATFORM_ABI, token_b=TOKEN_BYTECODE, token_abi=TOKEN_ABI, ico_b=ICO_BYTECODE, ico_abi=ICO_ABI)
+    return render_template('create.html', network_id=network_id, network_name=network_name, user=session['address'], platform_contract=PLATFORM_ADDRESS, platform_abi=PLATFORM_ABI)
 
 
 @app.route('/project/<int:n>')
@@ -152,7 +165,7 @@ def project_details(n):
     if n < 0 or n >= n_proj:
         return abort(404)
 
-    ICO = namedtuple('ICO', ['address', 'balance', 'price', 'funds'])
+    ICO = namedtuple('ICO', ['address', 'balance', 'price', 'funds', 'owner'])
     Token = namedtuple('Token', ['address', 'name', 'symbol', 'supply'])
 
     _, tok_addr, ico_addr = platform_contract.functions.getProject(n).call()
@@ -170,12 +183,13 @@ def project_details(n):
     ico_balance = token_contract.functions.balanceOf(ico_addr).call()
     ico_funds = w3.eth.getBalance(ico_addr)
     ico_price = ico_contract.call().tokenPriceInWei()
-    ico = ICO(ico_addr, ico_balance, ico_price, ico_funds)
+    ico_owner = ico_contract.call().owner()
+    ico = ICO(ico_addr, ico_balance, ico_price, ico_funds, ico_owner)
 
-    return render_template('project.html', user=session['address'], token=t, ico=ico, user_balance=user_balance)
+    return render_template('project.html', network_id=network_id, network_name=network_name, user=session['address'], token=t, ico=ico, user_balance=user_balance)
 
 
 @app.route('/profile')
 @needs_auth
 def profile():
-    return render_template('profile.html', user=session['address'])
+    return render_template('profile.html', network_id=network_id, network_name=network_name, user=session['address'])
