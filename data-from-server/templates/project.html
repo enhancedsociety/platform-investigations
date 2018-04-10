@@ -18,7 +18,7 @@
             <dt>Total Supply</dt>
             <dd>{{ token.supply }} {{ token.symbol }}</dd>
             <dt>My balance</dt>
-            <dd>{{ user_balance }} {{ token.symbol }}</dd>
+            <dd><b>{{ user_balance }} {{ token.symbol }}</b></dd>
         </dl>
         <h2>ICO/TSE</h2>
         <dl>
@@ -39,6 +39,7 @@
                 <label>Amount
                     <input type="number" step="1" min="0" max="{{ ico.balance }}" value=1>
                 </label>
+                <progress style="display: none;"></progress>
                 <button>Buy 1 {{ token.symbol }} for {{ ico.price }} wei</button>
             </fieldset>
         </form>
@@ -68,7 +69,10 @@
             const val = document.querySelector('input').value;
             const cost = val * token_price;
 
-            console.log({
+            f.querySelector('progress').style.display="inline";
+            f.querySelector('button').style.display="none";
+
+            console.log('tx', {
                 val,
                 cost,
                 from: "{{ user }}",
@@ -76,14 +80,21 @@
                 gas: 100000
             })
 
+            const wait_for_tx = (h) =>
+                new Promise((resolve, reject) => {
+                    promisify(web3.eth.getTransactionReceipt, h)
+                        .then(receipt => {
+                            if (receipt != null) {
+                                setTimeout(() => resolve(receipt), 300);
+                            } else {
+                                resolve(wait_for_tx(h));
+                            }
+                        })
+                        .catch(reject);
+                });
+
             promisify(web3.eth.sendTransaction, { from: "{{ user }}", to: "{{ ico.address }}", gas: 100000, value: cost })
-                .then((tx_hash) => promisify(web3.eth.getTransactionReceipt, tx_hash))
-                .then(console.log)
-                .then(() => promisify(web3.eth.getBalance, "{{ user }}")).then(console.log)
-                .then(console.log)
-                .then(() => promisify(web3.eth.getBalance, "{{ ico.address }}"))
-                .then(console.log)
-                .then(() => promisify(web3.eth.getBalance, "{{ token.address }}"))
+                .then(wait_for_tx)
                 .then(console.log)
                 .then(() => {
                     f.reset();
@@ -92,6 +103,8 @@
                 .catch((e) => {
                     console.error(e);
                     alert('failed ' + e);
+                    f.querySelector('progress').style.display="none";
+                    f.querySelector('button').style.display="inline";
                 });
         }
 

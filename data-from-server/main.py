@@ -25,7 +25,6 @@ w3.eth.enable_unaudited_features()
 ##########
 # Deployment of new projects is still manual, use this key
 # PLATFORM_OWNER_PRIVKEY = '0x8d4ee24d8d99220a91252ac22262562b6db07ae8375878b56868c0ffa7d43c2e'
-# PLATFORM_ADDRESS = '0xE87Ebf691d0A22878481aABD02c4C400c63DBD1a'
 
 PLATFORM_ADDRESS = Web3.toChecksumAddress(
     '0x9C7Da6Bd482C724449ceA8497D4f86f090DbA80e')

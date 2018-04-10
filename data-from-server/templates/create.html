@@ -9,6 +9,21 @@
 
 <body>
     {% include 'header.html' %}
+    <style>
+        #projProgress p {
+            opacity: 0;
+        }
+        #projProgress p.done{
+            opacity: 1;
+        }
+        #projProgress p.done progress{
+            display: none;
+        }
+        #projProgress p.active{
+            font-weight: bold;
+            opacity: 1;
+        }
+    </style>
     <form name="f" action="javascript:create_project(f)">
         <fieldset>
             <legend>
@@ -28,14 +43,14 @@
     </form>
     <div id="projProgress">
         <h2>Steps</h2>
-        <p style="font-weight: bold;">Fill form</p>
-        <p>Setting up Project data</p>
-        <p>Creating ICO contract [REQUIRES INTERACTION ON METAMASK]</p>
-        <p>Creating Token contract [REQUIRES INTERACTION ON METAMASK]</p>
-        <p>Setting up Token on ICO contract [REQUIRES INTERACTION ON METAMASK]</p>
-        <p>Adding to platform [REQUIRES INTERACTION ON METAMASK]</p>
+        <p class="active">Fill form</p>
+        <p>Setting up Project data <progress></progress> </p>
+        <p>Creating ICO contract [REQUIRES INTERACTION ON METAMASK] <progress></progress></p>
+        <p>Creating Token contract [REQUIRES INTERACTION ON METAMASK] <progress></progress></p>
+        <p>Setting up Token on ICO contract [REQUIRES INTERACTION ON METAMASK] <progress></progress></p>
+        <p>Adding to platform [REQUIRES INTERACTION ON METAMASK] <progress></progress></p>
         <p>Done. Find your project in the
-            <a href="/dashboard" style="opacity: 0;">Platform Dashboard</a>
+            <a href="/dashboard">Platform Dashboard</a>
         </p>
     </div>
 
@@ -66,19 +81,11 @@
 
         let step = 0;
         const steps = Array.from(document.querySelectorAll('#projProgress>p'));
-        steps.map((x, i) => { if (i > 0) x.style.opacity = 0; })
         const stepUp = () => {
-            steps[step].style.fontWeight = '';
+            steps[step].classList.remove('active');
+            steps[step].classList.add('done');
             step += 1;
-            steps[step].style.opacity = 1;
-            steps[step].style.fontWeight = 'bold';
-            // console.debug(step);
-            // console.debug(steps.length);
-            // console.debug(steps[step].innerText);
-            if (step === steps.length - 1) {
-                const goToDashBoard = document.querySelector('#projProgress>p>a');
-                goToDashBoard.style.opacity = 1;
-            }
+            steps[step].classList.add('active');
         }
 
         const create_project = (f) => {
