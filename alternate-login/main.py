@@ -19,7 +19,7 @@ def needs_auth(func):
 
 def is_logged_in():
     msg = '{}|{}'.format(
-        request.headers['Host'], CHALLENGE_STORE.get(session.get('address',''), ''))
+        request.headers['Host'], CHALLENGE_STORE.get(session.get('address', ''), ''))
     return 'signed_token' in session and verify_signature(msg, session['signed_token'])
 
 
@@ -52,6 +52,8 @@ def inner():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if is_logged_in():
+        return redirect(url_for('index'))
     if request.method == 'POST':
         form_data = request.get_json(force=True)
         if 'address' in session and 'signed_token' in form_data:

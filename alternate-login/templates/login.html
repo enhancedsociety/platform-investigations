@@ -8,26 +8,11 @@
 </head>
 
 <body>
-    <form id="existing">
-        <fieldset>
-            <legend>
-                <h4>Accounts</h4>
-            </legend>
-        </fieldset>
-    </form>
-    <form name="f" action="javascript:addAccount(f)">
-        <fieldset>
-            <legend>
-                <h4>Add Account</h4>
-            </legend>
-            <input type="text" pattern="0x[\d\w]{64}">
-            <button>Add</button>
-        </fieldset>
-    </form>
-
-    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
     <script src="https://cdn.rawgit.com/ethereumjs/browser-builds/2fb69a714afe092b06645286f14b94f41e5c062c/dist/ethereumjs-tx.js"></script>
     <script>
+
+        const util = EthJS.Util;
+
         const promisify = (func, ...args) =>
             new Promise((resolve, reject) =>
                 func(...args, (err, value) =>
@@ -51,7 +36,7 @@
             const accounts = getAccounts();
 
             const privKey = f.querySelector('input').value;
-            const address = EthJS.Util.bufferToHex(EthJS.Util.privateToAddress(privKey))
+            const address = util.bufferToHex(util.privateToAddress(privKey))
             account = {
                 address: address,
                 privateKey: privKey
@@ -81,16 +66,25 @@
             })
                 .then(resp => resp.json())
                 .then(respJSON => {
-                    const msgHash = EthJS.Util.rlphash(window.location.host + '|' + respJSON.token);
+                    // console.debug('Login message', window.location.host + '|' + respJSON.token);
+
+                    const with_prefix = (message) => {
+                        return "\u0019Ethereum Signed Message:\n" + message.length + message;
+                    }
+
+                    const msgHash = util.sha3(with_prefix(window.location.host + '|' + respJSON.token));
                     const accounts = getAccounts();
-                    console.log(accounts, account, accounts.filter(x => x.address === account))
                     const privKey = accounts.filter(x => x.address === account)[0].privateKey;
-                    console.log(privKey);
-                    const sig = EthJS.Util.ecsign(msgHash, EthJS.Util.toBuffer(privKey));
-                    console.log(sig, privKey);
-                    const sigBuf = EthJS.Util.Buffer.concat([sizedHex(sig.r, 32), sizedHex(sig.s, 32)], 64);
-                    const signed = EthJS.Util.bufferToHex(sigBuf);
-                    console.log(sigBuf, signed);
+                    const sig = util.ecsign(msgHash, util.toBuffer(privKey));
+
+                    const serializeSigElement =
+                        e => util.setLengthLeft(util.toUnsigned(util.fromSigned(e)), 32).toString('hex');
+                    const r = serializeSigElement(sig.r);
+                    const s = serializeSigElement(sig.s);
+                    const v = util.stripHexPrefix(util.intToHex(util.bufferToInt(sig.v)));
+
+                    const signed = util.addHexPrefix(r.concat(s, v).toString("hex"));
+
                     return Promise.resolve(signed);
                 })
                 .then(signed_token => fetch('/login', {
@@ -121,7 +115,6 @@
                 resolve(l ? l.map(x => x.address) : []);
             })
                 .then(l => {
-
                     if (l.length > 0) {
                         l.forEach(account => {
                             const b = el('button', account);
@@ -134,13 +127,28 @@
                 });
         }
 
-
         window.onload = () => {
-            // Use outside web3 provider since we *want* to use keys internally
-            web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/***REMOVED***'));
             fillAccounts();
         };          
     </script>
+    <h1>Login with Ethereum</h1>
+    <form id="existing">
+        <fieldset>
+            <legend>
+                <h4>Local Accounts</h4>
+            </legend>
+        </fieldset>
+    </form>
+    <form name="f" action="javascript:addAccount(f)">
+        <fieldset>
+            <legend>
+                <h4>Add Account</h4>
+            </legend>
+            <input type="text" placeholder="Private key" pattern="0x[\d\w]{64}">
+            <button>Add</button>
+        </fieldset>
+    </form>
+
 </body>
 
 </html>

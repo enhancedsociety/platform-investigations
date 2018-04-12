@@ -1,11 +1,6 @@
 # Example of login without Metamask or integrated providers
 
-Implements a minimal, safe login mechanism that requires direct user input of eth credentials.
-
-
-### Under construction
-
-The signing code is still, currently, broken.
+Implements a minimal, safe login mechanism that requires direct user input of eth credentials. It can be useful for inexperienced users or users without access to the metamask extension (Safari, basically) or a Dapp enabled browser (such as Brave of Toshi).
 
 
 ```
