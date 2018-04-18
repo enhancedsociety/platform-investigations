@@ -1,0 +1,10 @@
+# python byproducts
+
+__pycache__
+*.pyc
+
+# virtualenv folder
+venv
+
+# Editor specific
+.vscode

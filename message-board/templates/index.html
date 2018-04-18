@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Message board</title>
+</head>
+
+<body>
+    <form name="f" action="javascript:post(f)" style="display: none;">
+        <fieldset>
+            <legend>
+                <h4>Post</h4>
+            </legend>
+            <input name="msg" type="text" placeholder="Write a message" required>
+            <button>Post</button>
+        </fieldset>
+    </form>
+
+    <main>
+        <h1>Messages</h1>
+        {% for m in messages %}
+        <article data-sig="{{ m.signature }}">
+            <p>{{ m.message }}</p>
+            <a href="http://ropsten.etherscan.io/address/{{ m.author }}" rel="author">{{ m.author }}</a>
+            <aside>
+                <small>{{ m.signature }}</small>
+            </aside>
+        </article>
+        <hr> {% endfor %}
+    </main>
+
+    <script src="https://cdn.rawgit.com/ethereum/web3.js/develop/dist/web3.min.js"></script>
+    <script>
+        const promisify = (func, ...args) =>
+            new Promise((resolve, reject) =>
+                func(...args, (err, value) =>
+                    (err ? reject(err) : resolve(value))
+                )
+            );
+
+        const el = (tag, s) => {
+            const e = document.createElement(tag);
+            if (s) {
+                e.innerText = s || '';
+            }
+            return e;
+        };
+
+        const post = (f) => {
+            const message = f.elements['msg'].value;
+            promisify(web3.eth.getAccounts)
+                .then(([account]) =>
+                    promisify(web3.personal.sign, web3.toHex(message), account)
+                        .then(signature => fetch('/post', {
+                            body: JSON.stringify({ message, signature, author: account }),
+                            headers: {
+                                'content-type': 'application/json'
+                            },
+                            method: 'POST',
+                        }))
+                        .then(() => window.location.reload()))
+                .catch(console.error);
+        };
+
+        const validateMessages = () => {
+            /*  
+                TODO
+                Iterate over main>article tags
+                and validate the post author by verifying the
+                signature
+            */
+        }
+
+        window.onload = () => {
+            // Checking if Web3 has been injected by the browser (Mist/MetaMask)
+            if (typeof web3 !== 'undefined') {
+                // Use Mist/MetaMask's provider
+                web3 = new Web3(web3.currentProvider);
+
+                // TODO enable post form
+                promisify(web3.eth.getAccounts)
+                    .then(accounts => {
+                        if (accounts.length > 0) {
+                            document.querySelector("form").style.display = "block";
+                        }
+                    })
+
+            } else {
+                web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/***REMOVED***'));
+            }
+            validateMessages();
+        };          
+    </script>
+
+</body>
+
+</html>
