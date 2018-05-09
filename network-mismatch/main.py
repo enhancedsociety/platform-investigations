@@ -2,10 +2,10 @@ from flask import Flask, request, abort, render_template, jsonify
 from web3 import Web3, HTTPProvider
 
 w3 = {
-    'mainnet': Web3(HTTPProvider('https://mainnet.infura.io/***REMOVED***')),
-    'ropsten': Web3(HTTPProvider('https://ropsten.infura.io/***REMOVED***')),
-    'kovan': Web3(HTTPProvider('https://kovan.infura.io/***REMOVED***')),
-    'rinkeby': Web3(HTTPProvider('https://rinkeby.infura.io/***REMOVED***')),
+    'mainnet': Web3(HTTPProvider('https://mainnet.infura.io/')),
+    'ropsten': Web3(HTTPProvider('https://ropsten.infura.io/')),
+    'kovan': Web3(HTTPProvider('https://kovan.infura.io/')),
+    'rinkeby': Web3(HTTPProvider('https://rinkeby.infura.io/')),
 }
 
 app = Flask(__name__)

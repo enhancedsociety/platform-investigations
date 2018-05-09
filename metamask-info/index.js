@@ -79,7 +79,7 @@ window.onload = () => {
     web3 = new Web3(web3.currentProvider);
   } else {
     body.appendChild(p('Not on Mist nor Metamask connected'));
-    web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/***REMOVED***'));
+    web3 = new Web3(new Web3.providers.HttpProvider('https://ropsten.infura.io/'));
   }
   printInfo();
 };

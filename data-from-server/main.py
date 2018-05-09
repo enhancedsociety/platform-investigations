@@ -8,7 +8,7 @@ from shove import Shove
 
 from contract_data import PLATFORM_ABI, TOKEN_ABI, ICO_ABI
 
-w3 = Web3(HTTPProvider('https://ropsten.infura.io/***REMOVED***'))
+w3 = Web3(HTTPProvider('https://ropsten.infura.io/'))
 #w3 = Web3(HTTPProvider('http://localhost:8545'))
 
 network_id = int(w3.version.network)

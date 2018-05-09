@@ -22,7 +22,7 @@
         // Use Mist/MetaMask's provider
         web3 = new Web3(web3.currentProvider);
       } else {
-        web3 = new Web3(new Web3.providers.HttpProvider('https://{{ network_name }}.infura.io/***REMOVED***'));
+        web3 = new Web3(new Web3.providers.HttpProvider('https://{{ network_name }}.infura.io/'));
       }
 
       const my_network_id = web3.version.network;
